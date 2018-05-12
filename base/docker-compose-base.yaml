@@ -1,0 +1,139 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# solo ordering , Fabricorg with 3 template peers , 2 users , Sawtoothorg with 2 template 2 users
+
+# HLStudyGroup  domain
+# Sawtooth Sawtooth
+#Fabric Fabric
+version: '2'
+
+services:
+
+  orderer.HLStudyGroup.com:
+    container_name: orderer.HLStudyGroup.com
+    image: hyperledger/fabric-orderer
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+    - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+    - ../crypto-config/ordererOrganizations/HLStudyGroup.com/orderers/orderer.HLStudyGroup.com/msp:/var/hyperledger/orderer/msp
+    - ../crypto-config/ordererOrganizations/HLStudyGroup.com/orderers/orderer.HLStudyGroup.com/tls/:/var/hyperledger/orderer/tls
+    - orderer.HLStudyGroup.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+
+  peer0.Sawtooth.HLStudyGroup.com:
+    container_name: peer0.Sawtooth.HLStudyGroup.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.Sawtooth.HLStudyGroup.com
+      - CORE_PEER_ADDRESS=peer0.Sawtooth.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.Sawtooth.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.Sawtooth.HLStudyGroup.com:7051
+      - CORE_PEER_LOCALMSPID=SawtoothMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/Sawtooth.HLStudyGroup.com/peers/peer0.Sawtooth.HLStudyGroup.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/Sawtooth.HLStudyGroup.com/peers/peer0.Sawtooth.HLStudyGroup.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.Sawtooth.HLStudyGroup.com:/var/hyperledger/production
+    ports:
+      - 7051:7051
+      - 7053:7053
+
+  peer1.Sawtooth.HLStudyGroup.com:
+    container_name: peer1.Sawtooth.HLStudyGroup.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.Sawtooth.HLStudyGroup.com
+      - CORE_PEER_ADDRESS=peer1.Sawtooth.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.Sawtooth.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.Sawtooth.HLStudyGroup.com:7051
+      - CORE_PEER_LOCALMSPID=SawtoothMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/Sawtooth.HLStudyGroup.com/peers/peer1.Sawtooth.HLStudyGroup.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/Sawtooth.HLStudyGroup.com/peers/peer1.Sawtooth.HLStudyGroup.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.Sawtooth.HLStudyGroup.com:/var/hyperledger/production
+
+    ports:
+      - 8051:7051
+      - 8053:7053
+
+  peer0.Fabric.HLStudyGroup.com:
+    container_name: peer0.Fabric.HLStudyGroup.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.Fabric.HLStudyGroup.com
+      - CORE_PEER_ADDRESS=peer0.Fabric.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.Fabric.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.Fabric.HLStudyGroup.com:7051
+      - CORE_PEER_LOCALMSPID=FabricMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/Fabric.HLStudyGroup.com/peers/peer0.Fabric.HLStudyGroup.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/Fabric.HLStudyGroup.com/peers/peer0.Fabric.HLStudyGroup.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.Fabric.HLStudyGroup.com:/var/hyperledger/production
+    ports:
+      - 9051:7051
+      - 9053:7053
+
+  peer1.Fabric.HLStudyGroup.com:
+    container_name: peer1.Fabric.HLStudyGroup.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.Fabric.HLStudyGroup.com
+      - CORE_PEER_ADDRESS=peer1.Fabric.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.Fabric.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.Fabric.HLStudyGroup.com:7051
+      - CORE_PEER_LOCALMSPID=FabricMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/Fabric.HLStudyGroup.com/peers/peer1.Fabric.HLStudyGroup.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/Fabric.HLStudyGroup.com/peers/peer1.Fabric.HLStudyGroup.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.Fabric.HLStudyGroup.com:/var/hyperledger/production
+    ports:
+      - 10051:7051
+      - 10053:7053
+
+  peer2.Fabric.HLStudyGroup.com:
+    container_name: peer2.Fabric.HLStudyGroup.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer2.Fabric.HLStudyGroup.com
+      - CORE_PEER_ADDRESS=peer2.Fabric.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.Fabric.HLStudyGroup.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.Fabric.HLStudyGroup.com:7051
+      - CORE_PEER_LOCALMSPID=FabricMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/Fabric.HLStudyGroup.com/peers/peer2.Fabric.HLStudyGroup.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/Fabric.HLStudyGroup.com/peers/peer2.Fabric.HLStudyGroup.com/tls:/etc/hyperledger/fabric/tls
+        - peer2.Fabric.HLStudyGroup.com:/var/hyperledger/production
+    ports:
+      - 11051:7051
+      - 11053:7053
